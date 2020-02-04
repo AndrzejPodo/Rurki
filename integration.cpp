@@ -2,6 +2,9 @@
 
 using namespace std;
 
+
+vector<double> gauss(vector<vector<double>>&, vector<double>&);
+
 struct fcn_and_deriv{
     function<double (double)> f;
     function<double (double)> df;
@@ -71,7 +74,7 @@ fcn_and_deriv* create_base_function(double a, double b, int N, int i){
 }
 
 vector<double> MES(int n, double a, double b){
-    vector<double> coefficients;
+    vector<double> coefficients(n);
     vector<fcn_and_deriv*> base_functions;
     for(int i = 0; i <= n; i++){
         base_functions.push_back(create_base_function(a,b, n, i));
@@ -90,21 +93,80 @@ vector<double> MES(int n, double a, double b){
         }
     }
 
-    for(int i = 0; i <= n; i++){
-        for(int j = 0; j <= n; j++){
-            cout<<b_matrix[i][j]<<" ";
-        }
-        cout<<endl;
-    }
+    // for(int i = 0; i <= n; i++){
+    //     for(int j = 0; j <= n; j++){
+    //         cout<<b_matrix[i][j]<<" ";
+    //     }
+    //     cout<<endl;
+    // }
 
-    cout<<endl;
-    for(int i = 0; i <= n; i++){
-        cout<<v_matrix[i]<<" ";
+    // cout<<endl;
+    // for(int i = 0; i <= n; i++){
+    //     cout<<v_matrix[i]<<" ";
+    // }
+    // cout<<endl;
+
+    coefficients = gauss(b_matrix, v_matrix);
+
+    for(int i = 0; i < coefficients.size(); i++){
+        cout<<coefficients[i]<<" "<<endl;
     }
     cout<<endl;
-
     return {-1,-1};
 }
+
+vector<double> gauss(vector<vector<double>>& B, vector<double>& L){
+    int n = B[0].size();
+    B.pop_back();
+    for(int i = 0; i < B.size(); i++){
+        B[i].pop_back();
+        B[i].push_back(L[i]);
+    }
+    for(int i=0;i<n;i++) 
+    {                   
+        for(int j=i+1;j<n;j++)
+        {
+            if(abs(B[i][i]) < abs(B[j][i]))
+            {
+                for(int k=0;k<n+1;k++)
+                {
+                    B[i][k]=B[i][k]+B[j][k];
+                    B[j][k]=B[i][k]-B[j][k];
+                    B[i][k]=B[i][k]-B[j][k];
+                }
+            }
+      }
+    }
+    for(int i=0;i<n-1;i++)
+    {
+        for(int j=i+1;j<n;j++)
+        {
+            double f=B[j][i]/B[i][i];
+            for(int k=0;k<n+1;k++)
+            {
+              B[j][k]=B[j][k]-f*B[i][k];
+            }
+        }
+    }
+    vector<double> res(n-1);
+
+    for(int i = n-1; i>=0; i--)          
+    {                     
+        res[i]=B[i][n];
+                    
+        for(int j=i+1;j<n;j++)
+        {
+          if(i!=j)
+          {
+              res[i]=res[i]-B[i][j]*res[j];
+            }          
+        }
+        res[i]=res[i]/B[i][i];  
+    }
+
+    return res;
+}
+
 
 int main(){
 
