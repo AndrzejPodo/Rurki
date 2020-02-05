@@ -20,11 +20,11 @@ function<double (double)> multiply_fcn(function<double (double)> f1, function<do
     return [f1, f2](double x){ return f1(x)*f2(x);};
 }
 
-double integrate(double a, double b, function<double (double)> func, int n){
+double integrate(double a, double b, function<double (double)> func, int n) {
     double result = 0;
     double delta = (b-a)/n;
     double x1, x2, y1, y2;
-    for(int i = 0; i <= n-1; i++){
+    for (int i = 0; i <= n-1; i++) {
         x1 = a + i*delta;
         x2 = a + (i+1)*(delta);
         y1 = func(x1);
@@ -34,11 +34,11 @@ double integrate(double a, double b, function<double (double)> func, int n){
     return result; 
 }
 
-double B(fcn_and_deriv* u, fcn_and_deriv* v){
+double B(fcn_and_deriv* u, fcn_and_deriv* v) {
     double x = u->df(1+epsilon)*v->f(1+epsilon);
     double y = u->f(0+epsilon)*v->f(0+epsilon);
-    double z = integrate(0+epsilon,1-epsilon,multiply_fcn(u->df, v->df), 1000);
-    double r = 2*integrate(1+epsilon,2-epsilon,multiply_fcn(u->df, v->df), 1000);
+    double z = integrate(0 + epsilon, 1-epsilon, multiply_fcn(u->df, v->df), 1000);
+    double r = 2*integrate(1 + epsilon, 2-epsilon, multiply_fcn(u->df, v->df), 1000);
     return x - y + z + r;
 }
 
@@ -161,10 +161,20 @@ vector<double> gauss(vector<vector<double>>& B, vector<double>& L){
 }
 
 
-int main(){
-    vector<double> output = MES(12, 0, 2);
-    for(int i = 0; i < output.size(); i++){
-        cout<< output[i] <<" "<<endl;
+int main(int argc, char** args){
+    if(argc == 1){
+        return -1;
     }
-    cout<<endl;
+    fstream plik;
+    double a=0;
+    double b=2;
+    int n;
+    stringstream s(args[1]);
+    s >> n;
+    plik.open("result.txt", ios::out);
+    vector<double> output = MES(n, a, b);
+    for(int i = 0; i < output.size(); i++){
+        plik<<((b-a)/n)*i<< " "<<output[i]<<" "<<endl;
+    }
+    plik<<2<<" "<<0<<endl;
 }
