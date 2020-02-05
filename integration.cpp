@@ -2,6 +2,7 @@
 
 using namespace std;
 
+const double epsilon = 0.0002;
 
 vector<double> gauss(vector<vector<double>>&, vector<double>&);
 
@@ -34,11 +35,15 @@ double integrate(double a, double b, function<double (double)> func, int n){
 }
 
 double B(fcn_and_deriv* u, fcn_and_deriv* v){
-    return u->df(1)*v->f(1) - u->f(0)*v->f(0) + integrate(0,1,multiply_fcn(u->df, v->df), 1000) + 2*integrate(1,2,multiply_fcn(u->df, v->df), 1000);
+    double x = u->df(1+epsilon)*v->f(1+epsilon);
+    double y = u->f(0+epsilon)*v->f(0+epsilon);
+    double z = integrate(0+epsilon,1-epsilon,multiply_fcn(u->df, v->df), 1000);
+    double r = 2*integrate(1+epsilon,2-epsilon,multiply_fcn(u->df, v->df), 1000);
+    return x - y + z + r;
 }
 
 double L(fcn_and_deriv* v){
-    return (-1)*20*v->f(0);
+    return (-1)*20*v->f(0+epsilon);
 }
 
 fcn_and_deriv* create_base_function(double a, double b, int N, int i){
@@ -51,11 +56,12 @@ fcn_and_deriv* create_base_function(double a, double b, int N, int i){
             return 0.0;
         }
         else if(x >= pointA and x <= pointB){
-            return N/L * (x - a - i*L/N)+1;
+            return ((1.0)*N/L)*(x - a - i*L/N)+1;
         }
-        else{
-            return (-1)*N/L * (x - a - i*L/N)+1;
+        else if(x >= pointB and x <= pointC){
+            return ((-1.0)*N/L)*(x - a - i*L/N)+1;
         }
+        return 0.0;
     };
 
     function<double (double)> df = [=](double x){
@@ -63,11 +69,12 @@ fcn_and_deriv* create_base_function(double a, double b, int N, int i){
             return 0.0;
         }
         else if(x >= pointA and x <= pointB){
-            return N/L;
+            return (1.0)*N/L;
         }
-        else{
-            return (-1)*N/L;
+        else if(x > pointB and x <= pointC){
+            return (-1.0)*N/L;
         }
+        return 0.0;
     };
 
     return new fcn_and_deriv(f, df);
@@ -79,6 +86,7 @@ vector<double> MES(int n, double a, double b){
     for(int i = 0; i <= n; i++){
         base_functions.push_back(create_base_function(a,b, n, i));
     }
+    //base_functions.push_back(new fcn_and_deriv([](double x){return 0.0;}, [](double x){return 0.0;}));
     vector<vector<double>> b_matrix;
     for(int i = 0; i <= n; i++){
         vector<double> temp(n+1);
@@ -93,35 +101,20 @@ vector<double> MES(int n, double a, double b){
         }
     }
 
-    // for(int i = 0; i <= n; i++){
-    //     for(int j = 0; j <= n; j++){
-    //         cout<<b_matrix[i][j]<<" ";
-    //     }
-    //     cout<<endl;
-    // }
+    // coefficients = gauss(b_matrix, v_matrix);
 
-    // cout<<endl;
-    // for(int i = 0; i <= n; i++){
-    //     cout<<v_matrix[i]<<" ";
-    // }
-    // cout<<endl;
-
-    coefficients = gauss(b_matrix, v_matrix);
-
-    for(int i = 0; i < coefficients.size(); i++){
-        cout<<coefficients[i]<<" "<<endl;
-    }
-    cout<<endl;
-    return {-1,-1};
+    
+    return gauss(b_matrix, v_matrix);;
 }
 
 vector<double> gauss(vector<vector<double>>& B, vector<double>& L){
-    int n = B[0].size();
     B.pop_back();
+    int n = B.size();
     for(int i = 0; i < B.size(); i++){
         B[i].pop_back();
         B[i].push_back(L[i]);
     }
+
     for(int i=0;i<n;i++) 
     {                   
         for(int j=i+1;j<n;j++)
@@ -148,7 +141,7 @@ vector<double> gauss(vector<vector<double>>& B, vector<double>& L){
             }
         }
     }
-    vector<double> res(n-1);
+    vector<double> res(n, 0);
 
     for(int i = n-1; i>=0; i--)          
     {                     
@@ -169,8 +162,9 @@ vector<double> gauss(vector<vector<double>>& B, vector<double>& L){
 
 
 int main(){
-
-    MES(5, 0, 2);
-
-
+    vector<double> output = MES(12, 0, 2);
+    for(int i = 0; i < output.size(); i++){
+        cout<< output[i] <<" "<<endl;
+    }
+    cout<<endl;
 }
